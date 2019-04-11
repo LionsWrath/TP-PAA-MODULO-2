@@ -4,6 +4,8 @@
 #include <vector>
 #include <deque>
 #include <fstream>
+#include <unistd.h>
+#include <string>
 
 #define MINV 5
 
@@ -131,13 +133,40 @@ void genTree(const int& V, int& TV, vii& edges, mt19937& gen) {
     TV += V;
 }
 
-int main() {
+int main(int argc, char** argv) {
 
     int N, TV = 1;
+    int R = 0, F = 0, B = 0, T = 0;
 
-    // Random initialization
+    int sflag = 0, fflag = 0, c;
+    string filename;
     uint_least32_t seed;    
-    sysrandom(&seed, sizeof(seed));
+    opterr = 0;
+
+    while ((c = getopt (argc, argv, "s:f:")) != -1)
+    switch (c) {
+    case 's':
+        sflag = 1;
+        seed = atoi(optarg);
+        break;
+    case 'f':
+        fflag = 1;
+        filename = optarg;
+        break;
+    case '?':
+        if (optopt == 's' || optopt == 'f')
+            cerr << "Option -" << optopt << " requires an argument." << endl;
+        else
+            cerr << "Unknown option -" << optopt << "." << endl;
+    default:
+        return 1;
+    }
+
+    // Random Seed Creation
+    if (!sflag)
+        sysrandom(&seed, sizeof(seed));
+
+    // Random Engine Initialization
     mt19937 gen(seed);
 
     cin >> N;
@@ -157,21 +186,25 @@ int main() {
         switch(t) {
         case 1:
             cin >> l >> r;
+            B++;
             genCompleteBipartite(l, r, TV, edges);
             genPermutation(l + r, TV, map, gen);
             break;
         case 2:
             cin >> v;
+            T++;
             genCycle(v, TV, edges);
             genPermutation(v, TV, map, gen);
             break;
         case 3:
             cin >> v;
+            R++;
             genPath(v, TV, edges);
             genPermutation(v, TV, map, gen);
             break;
         case 4:
             cin >> v;
+            F++;
             genTree(v, TV, edges, gen);
             genPermutation(v, TV, map, gen);
             break;
@@ -181,8 +214,11 @@ int main() {
         }
     }
 
+    // Shuffle the configurations
     shuffle(edges.begin(), edges.end(), gen);
+    shuffle(map.begin(), map.end(), gen);
     
+    // Print Test Case
     cout << TV - 1 << " " << edges.size() << endl;
 
     for (const auto& p : edges)
@@ -191,7 +227,15 @@ int main() {
     for (const auto& p : map)
         cout << p.first << " " << p.second << endl;
 
-    cerr << "SEED: " << seed << endl;
+    cerr << R << " " << F << " " << B << " " << T << endl;
+
+    if (fflag) {
+        ofstream file;
+        file.open(filename, ios::out);
+        file << seed;
+        file.close();
+    }
+
 
     return 0;
 }
