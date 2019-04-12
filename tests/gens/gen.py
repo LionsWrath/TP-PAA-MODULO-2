@@ -31,7 +31,7 @@ while N > 4 and M > 0:
 
     if t == 2:
 
-        if v > M:
+        if v > M or v % 2 != 0:
             continue
 
         C.append(str(t) + " " + str(v))

@@ -19,18 +19,13 @@ for line in lines[M+1:M+N+2]:
     spl = line.split()
     perm[int(spl[0])] = int(spl[1])
 
-dist = nx.shortest_path_length(G)
-dist = dict(dist)
-
 lim  = -1
 
 for conn in nx.connected_components(G):
     sum = 0
 
-    print(conn)
-
     for v in conn:
-        sum += dist[v][perm[v]]
+        sum += nx.shortest_path_length(G.subgraph(conn), source=v, target=perm[v])
         
     if lim == -1:
         lim = sum/2
