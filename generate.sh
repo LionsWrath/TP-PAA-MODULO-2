@@ -7,5 +7,14 @@ GEN_PATH="$TEST_PATH/gens"
 SEED_PATH="$TEST_PATH/seed"
 
 make
-./generator.out -f $SEED_PATH/$1.seed < $GEN_PATH/$1.gen 1> $IN_PATH/$1.in 2> $OUT_PATH/$1.out
-ipython calcLimit.py $IN_PATH/$1.in >> $OUT_PATH/$1.out
+
+files=('1' '2' '3' '4' '5' '6' '7' '8' '9' '10')
+
+for ((i=0; i<${#files[@]}; i++)) do
+    file=${files[${i}]}
+
+    #./generator.out -f $SEED_PATH/$file.seed < $GEN_PATH/$file.gen 1> $IN_PATH/$file.in 2> $OUT_PATH/$file.out
+    ipython calcLimit.py $IN_PATH/$file.in >> $OUT_PATH/$file.out
+    ipython check.py $IN_PATH/$file.in $OUT_PATH/$file.out
+
+done
