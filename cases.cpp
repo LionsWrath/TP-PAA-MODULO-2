@@ -6,6 +6,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <string>
+#include <unordered_map>
 
 #define MINV 5
 
@@ -22,6 +23,33 @@ size_t sysrandom(void* dst, size_t dstlen) {
     stream.read(buffer, dstlen);
 
     return dstlen;
+}
+
+bool isPath(const vii& edges) {
+    unordered_map<int, int> check;
+
+    for (const auto& p : edges) {
+        if (check.find(p.first) == check.end()) {
+            check[p.first] = 1;
+        } else {
+            check[p.first]++;
+        }
+
+        if (check.find(p.second) == check.end()) {
+            check[p.second] = 1;
+        } else {
+            check[p.second]++;
+        }
+    }
+
+    int one = 3;
+
+    for (auto& p : check) {
+        if (p.second == 1) one--;
+        if (!one) return false;
+    }
+
+    return true; 
 }
 
 void genPermutation(const int& V, const int& TV, vii& map, mt19937& gen) {
@@ -105,30 +133,38 @@ void genTree(const int& V, int& TV, vii& edges, mt19937& gen) {
         exit(1);
     }
 
-    deque<int>  sh; // Not added
-    vector<int> th; // Added
+    vii aux;
 
-    for (int i=0; i<V; i++) {
-        sh.push_back(i); 
-    }
+    do {
+        aux.clear();
 
-    shuffle(sh.begin(), sh.end(), gen);
+        deque<int>  sh; // Not added
+        vector<int> th; // Added
 
-    // Add root
-    th.push_back(sh.front());
-    sh.pop_front();
+        for (int i=0; i<V; i++) {
+            sh.push_back(i); 
+        }
 
-    while (!sh.empty()) {
-	uniform_int_distribution<> dist(0, th.size()-1);
+        shuffle(sh.begin(), sh.end(), gen);
 
-        int a = dist(gen);  // Random idx from th 
-        int b = sh.front(); // Get next from queue
-
+        // Add root
+        th.push_back(sh.front());
         sh.pop_front();
-        th.push_back(b);
 
-        edges.push_back(make_pair(TV + th[a], TV + b));
-    }
+        while (!sh.empty()) {
+            uniform_int_distribution<> dist(0, th.size()-1);
+
+            int a = dist(gen);  // Random idx from th 
+            int b = sh.front(); // Get next from queue
+
+            sh.pop_front();
+            th.push_back(b);
+
+            aux.push_back(make_pair(TV + th[a], TV + b));
+        }
+    } while (isPath(aux));
+
+    edges.insert(edges.end(), aux.begin(), aux.end());
 
     TV += V;
 }
@@ -171,7 +207,7 @@ int main(int argc, char** argv) {
 
     cin >> N;
 
-    if (N <= 0) {
+    if (N < 2) {
         cerr << "Número incorreto de naves!" << endl;
         return 1;
     }
@@ -187,26 +223,26 @@ int main(int argc, char** argv) {
         case 1:
             cin >> l >> r;
             B++;
-            genCompleteBipartite(l, r, TV, edges);
             genPermutation(l + r, TV, map, gen);
+            genCompleteBipartite(l, r, TV, edges);
             break;
         case 2:
             cin >> v;
             T++;
-            genCycle(v, TV, edges);
             genPermutation(v, TV, map, gen);
+            genCycle(v, TV, edges);
             break;
         case 3:
             cin >> v;
             R++;
-            genPath(v, TV, edges);
             genPermutation(v, TV, map, gen);
+            genPath(v, TV, edges);
             break;
         case 4:
             cin >> v;
             F++;
-            genTree(v, TV, edges, gen);
             genPermutation(v, TV, map, gen);
+            genTree(v, TV, edges, gen);
             break;
         default:
             cerr << "Identificador incorreto de tipo de nave!" << endl;
